@@ -1,0 +1,29 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=538
+
+
+Posted email addresses are regularly harvested and processed by automated web search tools. These addresses often end up added or sold to bulk email lists so that the unsuspecting address owner receives large quantities of unsolicited email, also known as Spam. 
+
+To avoid having one's email address harvested in this way, it can be "munged", or made unrecognizable to the automated system while still clearly appearing as an email address to any human reader. Examples:
+
+  unmunged:  
+       username@domain.com
+
+  munged, separator type:
+       <username>·<domain>·<com>
+       |username|at|domain|dot|com|
+
+  munged, substitution type:
+       useNrnaOme@SdomPainA.coMm (remove "NOSPAM" to email)
+       useSrnPamAe@MdoFmaRinE.cEom (remove "SPAMFREE" to email)
+
+  munged, completion type:
+       usernam____n.com (insert "e@domai" to email)
+
+This script provides a visual mode mapping Shift+F12 which will munge any selected email address randomly per one of the examples above. The main function "Cream_email_munge()" will also return a munged address if passed a valid email, like:
+
+  let mymunge = Cream_email_munge("username@domain.com")
+
+
+This is one of many custom utilities and functions for gVim from the Cream project (http://cream.sourceforge.net), a configuration of Vim for those of us familiar with Apple and Windows software.
+
+

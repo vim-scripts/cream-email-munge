@@ -21,8 +21,8 @@
 " Foundation,  Inc.,  59  Temple  Place  -  Suite  330,   Boston,   MA
 " 02111-1307, USA.
 " 
-" Date:    2003-01-21
-" Version: 0.1
+" Date:    2003-01-22
+" Version: 0.2
 " Source:  http://vim.sourceforge.net/scripts/script.php?script_id=538
 " Author:  Steve Hall  [ digitect@mindspring.com ]
 "
@@ -36,12 +36,19 @@
 " "munged", or made unrecognizable by the automated system while still
 " appearing as an email address to any human reader. Examples include:
 " 
-"   unmunged:  username@domain.com
+"   unmunged:  
+"        username@domain.com
 "
-"   munged:    <username>·<domain>·<com>
-"              |username|at|domain|dot|com|
-"              usNerOnameS@dPomAainM.com [remove NOSPAM to email]
-"              userna____main.com [fill in the blank with "me@do"]
+"   munged, separator type:
+"        <username>·<domain>·<com>
+"        |username|at|domain|dot|com|
+"
+"   munged, substitution type:
+"        useNrnaOme@SdomPainA.coMm (remove "NOSPAM" to email)
+"        useSrnPamAe@MdoFmaRinE.cEom (remove "SPAMFREE" to email)
+"
+"   munged, completion type:
+"        usernam____n.com (insert "e@domai" to email)
 "
 " This script provides a visual mode mapping Shift+F12 which will
 " munge any selected email address per the first two examples above.
@@ -91,20 +98,55 @@ function! Cream_email_munge(email)
 		let myemail = a:email
 	endif
 
-	" get last two digits of localtime(), 00-99
-	let rnd = matchstr(localtime(), '..$') + 0
+	" get random number (last two digits of localtime(), 00-99)
+	let rnd1 = matchstr(localtime(), '..$') + 0
+	" get random number, boolean (0 or 1)
+	let rnd2 = rnd1[1] % 2
+	" get random number, boolean (0 or 1) 
+	" (uses tens of seconds register of localtime())
+	let rnd3 = rnd1[0] % 2
+
+	if rnd2 == 0
+		" do separator-type munge
+		let myemail = s:Cream_email_munge_separate(myemail, rnd1)
+	else
+		if rnd3 == 0
+			" do substitution-type munge
+			let myemail = s:Cream_email_munge_substitute(myemail, rnd1)
+		else
+			" do substitution-type munge
+			let myemail = s:Cream_email_munge_completion(myemail, rnd1)
+		endif
+	endif
+
+	" if visual mode, paste back over 
+	if a:email == "v"
+		let @x = myemail
+		normal "xp
+		normal gv
+	else
+		return myemail
+	endif
+
+endfunction
+
+function! s:Cream_email_munge_separate(email, random)
+" return separator-type munge of passed email address
+
+	let myemail = a:email
+	let rnd1 = a:random
 
 	" munge separators, switch every second
-	if     rnd[1] % 5 < 1
+	if     rnd1[1] % 5 < 1
 		let sep1 = "|"
 		let sep2 = "|"
-	elseif rnd[1] % 5 < 2
+	elseif rnd1[1] % 5 < 2
 		let sep1 = "["
 		let sep2 = "]"
-	elseif rnd[1] % 5 < 3
+	elseif rnd1[1] % 5 < 3
 		let sep1 = "{"
 		let sep2 = "}"
-	elseif rnd[1] % 5 < 4
+	elseif rnd1[1] % 5 < 4
 		let sep1 = "<"
 		let sep2 = ">"
 	else
@@ -113,16 +155,16 @@ function! Cream_email_munge(email)
 	endif
 
     " replace @ and . characters (most times), switch every 5 seconds
-	if     rnd % 25 < 8
+	if     rnd1 % 25 < 8
 		let at = sep2 . "at" . sep1
 		let dot = sep2 . "dot" . sep1
-	elseif rnd % 25 < 12
+	elseif rnd1 % 25 < 12
 		let at = sep2 . " " . sep1
 		let dot = sep2 . " " . sep1
-	elseif rnd % 25 < 15
+	elseif rnd1 % 25 < 15
 		let at = sep2 . "·" . sep1
 		let dot = sep2 . "·" . sep1
-	elseif rnd % 25 < 18
+	elseif rnd1 % 25 < 18
 		let at = sep2 . "*" . sep1
 		let dot = sep2 . "*" . sep1
 	else
@@ -135,15 +177,59 @@ function! Cream_email_munge(email)
 
 	let myemail = sep1 . myemail . sep2
 
-	" if visual mode, paste over selection with munge
-	if a:email == "v"
-		let @x = myemail
-		normal "xp
-		normal gv
-	else
-		return myemail
-	endif
+	return myemail
 
 endfunction
 
+function! s:Cream_email_munge_substitute(email, random)
+" return substitution-type munge of passed email address
+" Example:  usNerOnameS@dPomAainM.com [remove NOSPAM to email]
+
+	let myemail = tolower(a:email)
+	let rnd1 = a:random
+
+	if rnd1[0] < 5
+		let spliceword = "NOSPAM"
+	else
+		let spliceword = "SPAMFREE"
+	endif
+	" * divide email length by spliceword length to obtain interval
+	let interval = strlen(myemail) / strlen(spliceword)
+
+	" splice in word at interval
+	let strfirst = ""
+	let strlast = ""
+	let pos = (interval / 2) - interval + 1
+	let i = 0
+	while i < strlen(spliceword)
+		let pos = pos + interval + 1
+		" get first part
+		let strfirst = strpart(myemail, 0, pos)
+		" get last part
+		let strlast = strpart(myemail, pos)
+		" concatenate
+		let myemail = strfirst . spliceword[i] . strlast
+		let i = i + 1
+	endwhile
+
+	return myemail . " (remove \"" . spliceword . "\" to email)"
+
+endfunction
+
+function! s:Cream_email_munge_completion(email, random)
+" Example:  userna____main.com [fill in blank with "me@do"]
+
+	let myemail = a:email
+	" random is (1 - 5) - 1, based on tens of seconds register of localtime()
+	let rnd1 = (a:random[0] % 5) + 3
+
+	let pos = match(myemail, "@") - (a:random[1] % 5 / 2)
+	let strfirst = strpart(myemail, 0, pos)
+	let strmiddle = strpart(myemail, pos, rnd1)
+	let strlast = strpart(myemail, pos + rnd1)
+
+
+	return strfirst . "____" . strlast . " (insert \"" . strmiddle . "\" to email)"
+
+endfunction
 

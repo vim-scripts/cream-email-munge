@@ -22,7 +22,7 @@
 " 02111-1307, USA.
 " 
 " Date:    2003-01-22
-" Version: 0.2
+" Version: 0.2a
 " Source:  http://vim.sourceforge.net/scripts/script.php?script_id=538
 " Author:  Steve Hall  [ digitect@mindspring.com ]
 "
@@ -64,10 +64,6 @@
 " Installation:
 " * Drop this file into your plugins directory and (re)start Vim.
 "
-" Todo:
-" * More sophisticated munging like:  
-"      usNerOnameS@dPomAainM.com [remove letters NOSPAM for address]
-"
 
 " list as an add-on if Cream project in use
 if exists("$CREAM")
@@ -80,7 +76,7 @@ if exists("$CREAM")
 	\ "call Cream_email_munge(\"v\")"
 	\ )
 else
-    vmap <silent> <S-F12> :call Cream_email_munge("v")
+    vmap <silent> <S-F12> :call Cream_email_munge("v")<CR>
 endif
 
 function! Cream_email_munge(email)
@@ -132,6 +128,7 @@ endfunction
 
 function! s:Cream_email_munge_separate(email, random)
 " return separator-type munge of passed email address
+" Example:  {username}at{domain}dot{com}
 
 	let myemail = a:email
 	let rnd1 = a:random
@@ -227,7 +224,6 @@ function! s:Cream_email_munge_completion(email, random)
 	let strfirst = strpart(myemail, 0, pos)
 	let strmiddle = strpart(myemail, pos, rnd1)
 	let strlast = strpart(myemail, pos + rnd1)
-
 
 	return strfirst . "____" . strlast . " (insert \"" . strmiddle . "\" to email)"
 
